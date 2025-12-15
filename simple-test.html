@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>简单测试</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🇨🇳 早读神器测试</h1>
+        <p>如果你能看到这个页面，说明 GitHub Pages 工作正常。</p>
+        <br>
+        <button onclick="testClick()">点击测试</button>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        function testClick() {
+            document.getElementById('result').innerHTML = '✅ 按钮点击成功！JavaScript 正常工作！';
+            console.log('测试成功！');
+        }
+    </script>
+</body>
+</html>
