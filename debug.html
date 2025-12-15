@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试页面 - 早读神器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .pass { color: green; }
+        .fail { color: red; }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #log {
+            background: #333;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐛 早读神器调试页面</h1>
+
+    <div class="warning">
+        <strong>⚠️ 重要提示：</strong><br>
+        直接打开HTML文件（file://）无法使用麦克风功能！<br>
+        您必须通过HTTP服务器访问，如 http://localhost:8080
+    </div>
+
+    <div class="test-item">
+        <h3>1. 检查浏览器支持</h3>
+        <div id="browser-support"></div>
+    </div>
+
+    <div class="test-item">
+        <h3>2. 检查当前访问方式</h3>
+        <div id="protocol-check"></div>
+    </div>
+
+    <div class="test-item">
+        <h3>3. 麦克风权限测试</h3>
+        <button id="test-mic">测试麦克风</button>
+        <div id="mic-status"></div>
+    </div>
+
+    <div class="test-item">
+        <h3>4. JavaScript控制台日志</h3>
+        <div id="log">等待日志...</div>
+    </div>
+
+    <div class="test-item">
+        <h3>5. 快速解决方案</h3>
+        <p><strong>如果看到错误，请按以下步骤操作：</strong></p>
+        <ol>
+            <li>打开命令提示符（CMD）</li>
+            <li>输入：<code>cd /d D:\CodeProjects\morning-reading-zoo</code></li>
+            <li>输入：<code>python -m http.server 8080</code></li>
+            <li>打开浏览器访问：<a href="http://localhost:8080" target="_blank">http://localhost:8080</a></li>
+        </ol>
+        <p>或直接双击运行：<strong>启动服务器.bat</strong></p>
+    </div>
+
+    <script>
+        // 重写console.log以显示在页面上
+        const logElement = document.getElementById('log');
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logElement.textContent += args.join(' ') + '\n';
+            logElement.scrollTop = logElement.scrollHeight;
+        };
+
+        // 1. 检查浏览器支持
+        function checkBrowserSupport() {
+            const support = document.getElementById('browser-support');
+            const checks = [
+                { name: 'getUserMedia', supported: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) },
+                { name: 'AudioContext', supported: !!(window.AudioContext || window.webkitAudioContext) },
+                { name: 'Canvas', supported: !!document.createElement('canvas').getContext },
+                { name: 'ES6 Modules', supported: !!(document.createElement('script').noModule !== undefined) },
+                { name: 'localStorage', supported: !!window.localStorage }
+            ];
+
+            let html = '';
+            checks.forEach(check => {
+                html += `<div class="${check.supported ? 'pass' : 'fail'}">
+                    ${check.supported ? '✓' : '✗'} ${check.name}: ${check.supported ? '支持' : '不支持'}
+                </div>`;
+            });
+
+            // 检查协议
+            const isHTTPS = location.protocol === 'https:' || location.hostname === 'localhost';
+            checks.push({ name: '安全上下文', supported: isHTTPS });
+
+            html += `<div class="${isHTTPS ? 'pass' : 'fail'}">
+                ${isHTTPS ? '✓' : '✗'} 访问方式: ${location.protocol} ${isHTTPS ? '(正确)' : '(错误 - 需要HTTPS或localhost)'}
+            </div>`;
+
+            support.innerHTML = html;
+        }
+
+        // 2. 检查协议
+        function checkProtocol() {
+            const check = document.getElementById('protocol-check');
+            const protocol = location.protocol;
+            const hostname = location.hostname;
+
+            if (protocol === 'file:') {
+                check.innerHTML = `
+                    <div class="fail">
+                        ❌ 错误：您正在使用 file:// 协议打开文件！<br>
+                        这样无法访问麦克风。<br>
+                        请使用HTTP服务器访问。
+                    </div>
+                `;
+            } else if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                check.innerHTML = `
+                    <div class="pass">
+                        ✅ 正确：您正在通过 localhost 访问<br>
+                        麦克风功能应该可以正常使用。
+                    </div>
+                `;
+            } else if (protocol === 'https:') {
+                check.innerHTML = `
+                    <div class="pass">
+                        ✅ 正确：您正在通过 HTTPS 访问<br>
+                        麦克风功能应该可以正常使用。
+                    </div>
+                `;
+            } else {
+                check.innerHTML = `
+                    <div class="fail">
+                        ❌ 警告：非安全的HTTP访问<br>
+                        某些浏览器可能限制麦克风访问。
+                    </div>
+                `;
+            }
+        }
+
+        // 3. 测试麦克风
+        async function testMicrophone() {
+            const button = document.getElementById('test-mic');
+            const status = document.getElementById('mic-status');
+
+            button.disabled = true;
+            status.innerHTML = '正在请求麦克风权限...';
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false
+                    }
+                });
+
+                status.innerHTML = '<div class="pass">✅ 麦克风权限获取成功！</div>';
+
+                // 测试音频上下文
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaStreamSource(stream);
+                source.connect(analyser);
+
+                status.innerHTML += '<div class="pass">✅ 音频系统初始化成功！</div>';
+
+                // 停止流
+                stream.getTracks().forEach(track => track.stop());
+
+            } catch (error) {
+                console.error('麦克风测试失败:', error);
+                status.innerHTML = `<div class="fail">❌ 错误：${error.message}</div>`;
+
+                if (error.name === 'NotAllowedError') {
+                    status.innerHTML += '<p>请允许浏览器访问麦克风。</p>';
+                } else if (error.name === 'NotFoundError') {
+                    status.innerHTML += '<p>未检测到麦克风设备。</p>';
+                }
+            }
+
+            button.disabled = false;
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('页面加载完成');
+            checkBrowserSupport();
+            checkProtocol();
+
+            document.getElementById('test-mic').addEventListener('click', testMicrophone);
+        });
+    </script>
+</body>
+</html>

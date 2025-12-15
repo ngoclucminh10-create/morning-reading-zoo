@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试页面 - 早读神器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>🔍 早读神器调试页面</h1>
+
+    <div class="debug-section">
+        <h2>1. 模块加载测试</h2>
+        <button onclick="testModuleLoading()">测试模块加载</button>
+        <div id="module-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>2. 麦克风权限测试</h2>
+        <button onclick="testMicrophone()">测试麦克风</button>
+        <div id="mic-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>3. 启动完整应用</h2>
+        <button onclick="startApp()">启动早读神器</button>
+        <div id="app-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>4. 控制台日志</h2>
+        <button onclick="clearLog()">清空日志</button>
+        <div id="log"></div>
+    </div>
+
+    <script type="module">
+        // 重写console方法来捕获日志
+        const log = document.getElementById('log');
+        const originalLog = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn,
+            info: console.info
+        };
+
+        function addToLog(type, ...args) {
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.map(arg =>
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+
+            log.innerHTML += `<span class="${type}">[${timestamp}] ${type.toUpperCase()}: ${message}</span>\n`;
+            log.scrollTop = log.scrollHeight;
+
+            // 同时输出到原始控制台
+            originalLog[type](...args);
+        }
+
+        console.log = (...args) => addToLog('info', ...args);
+        console.error = (...args) => addToLog('error', ...args);
+        console.warn = (...args) => addToLog('warn', ...args);
+        console.info = (...args) => addToLog('info', ...args);
+
+        // 暴露函数到全局作用域
+        window.testModuleLoading = async function() {
+            const resultDiv = document.getElementById('module-result');
+            resultDiv.innerHTML = '<p style="color: blue;">正在测试模块加载...</p>';
+
+            try {
+                // 测试导入各个模块
+                const AudioDetector = await import('./scripts/audio.js');
+                resultDiv.innerHTML += '<p class="success">✓ audio.js 加载成功</p>';
+
+                const AnimalManager = await import('./scripts/animals.js');
+                resultDiv.innerHTML += '<p class="success">✓ animals.js 加载成功</p>';
+
+                const SettingsManager = await import('./scripts/settings.js');
+                resultDiv.innerHTML += '<p class="success">✓ settings.js 加载成功</p>';
+
+                resultDiv.innerHTML += '<p class="success"><strong>所有模块加载成功！</strong></p>';
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ 模块加载失败: ${error.message}</p>`;
+                console.error('模块加载错误:', error);
+            }
+        };
+
+        window.testMicrophone = async function() {
+            const resultDiv = document.getElementById('mic-result');
+            resultDiv.innerHTML = '<p style="color: blue;">正在测试麦克风...</p>';
+
+            try {
+                // 请求麦克风权限
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                resultDiv.innerHTML += '<p class="success">✓ 麦克风权限获取成功</p>';
+
+                // 检查音频轨道
+                const audioTracks = stream.getAudioTracks();
+                if (audioTracks.length > 0) {
+                    resultDiv.innerHTML += `<p class="success">✓ 找到 ${audioTracks.length} 个音频轨道</p>`;
+
+                    // 创建音频上下文来测试音量
+                    const audioContext = new AudioContext();
+                    const source = audioContext.createMediaStreamSource(stream);
+                    const analyser = audioContext.createAnalyser();
+                    source.connect(analyser);
+
+                    resultDiv.innerHTML += '<p class="success">✓ 音频分析器创建成功</p>';
+
+                    // 监听音量变化
+                    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                    const checkVolume = () => {
+                        analyser.getByteFrequencyData(dataArray);
+                        const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+                        if (average > 0) {
+                            resultDiv.innerHTML += `<p class="success">✓ 检测到声音！音量: ${average.toFixed(2)}</p>`;
+                            stream.getTracks().forEach(track => track.stop());
+                            return;
+                        }
+                        setTimeout(checkVolume, 100);
+                    };
+                    checkVolume();
+                } else {
+                    resultDiv.innerHTML += '<p class="error">✗ 未找到音频轨道</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ 麦克风测试失败: ${error.message}</p>`;
+                console.error('麦克风错误:', error);
+
+                if (error.name === 'NotAllowedError') {
+                    resultDiv.innerHTML += '<p class="error">请允许浏览器访问麦克风</p>';
+                } else if (error.name === 'NotFoundError') {
+                    resultDiv.innerHTML += '<p class="error">未找到麦克风设备</p>';
+                }
+            }
+        };
+
+        window.startApp = async function() {
+            const resultDiv = document.getElementById('app-result');
+            resultDiv.innerHTML = '<p style="color: blue;">正在启动应用...</p>';
+
+            try {
+                // 导入并创建应用实例
+                const { default: MorningReadingZoo } = await import('./scripts/main.js');
+
+                // 检查应用是否已自动初始化
+                if (window.zooApp) {
+                    resultDiv.innerHTML += '<p class="success">✓ 应用已自动初始化</p>';
+
+                    // 尝试点击开始按钮
+                    const welcomeStartBtn = document.getElementById('welcome-start-btn');
+                    if (welcomeStartBtn) {
+                        resultDiv.innerHTML += '<p style="color: blue;">模拟点击开始按钮...</p>';
+                        welcomeStartBtn.click();
+                        resultDiv.innerHTML += '<p class="success">✓ 开始按钮已点击</p>';
+                    } else {
+                        resultDiv.innerHTML += '<p class="error">✗ 未找到开始按钮</p>';
+                    }
+                } else {
+                    resultDiv.innerHTML += '<p class="error">✗ 应用未自动初始化</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ 启动失败: ${error.message}</p>`;
+                console.error('启动错误:', error);
+            }
+        };
+
+        window.clearLog = function() {
+            document.getElementById('log').innerHTML = '';
+        };
+
+        // 初始日志
+        console.info('调试页面已加载');
+        console.info('当前URL:', window.location.href);
+        console.info('浏览器信息:', navigator.userAgent);
+    </script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>早读神器 - 声音动物园</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    <!-- 欢迎界面 -->
+    <div id="welcome-screen" class="screen active">
+        <div class="welcome-content">
+            <h1 class="welcome-title">🇨🇳 早读神器 🐾</h1>
+            <p class="welcome-subtitle">用声音创造一个神奇的动物园！</p>
+            <div class="welcome-instructions">
+                <p>📢 大声朗读，声音越大，动物越多！</p>
+                <p>🎤 需要使用麦克风权限</p>
+                <p>🎨 可爱的像素风动物等着你</p>
+            </div>
+            <button id="welcome-start-btn" class="btn-primary btn-large">开始使用</button>
+        </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="main-screen" class="screen">
+        <header class="header">
+            <div class="header-left">
+                <h1 class="title">🇨🇳 早读神器 🐾</h1>
+            </div>
+            <div class="header-right">
+                <div class="volume-display">
+                    <span id="volume-value">0</span> dB
+                    <div class="volume-bar">
+                        <div id="volume-fill"></div>
+                    </div>
+                </div>
+                <div class="time-display">
+                    <span id="current-time">00:00</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <canvas id="zoo-canvas"></canvas>
+
+            <div class="control-panel">
+                <div class="controls-row">
+                    <button id="start-btn" class="btn-primary">开始早读</button>
+                    <button id="pause-btn" class="btn-secondary" disabled>暂停</button>
+                    <button id="clear-btn" class="btn-secondary">清空动物园</button>
+                    <button id="settings-btn" class="btn-secondary">设置</button>
+                </div>
+
+                <div class="speed-row">
+                    <div class="speed-controls">
+                        <div class="speed-label">生成速度：</div>
+                        <div class="speed-buttons">
+                            <button class="speed-btn" data-speed="0.5">0.5x</button>
+                            <button class="speed-btn" data-speed="1">1x</button>
+                            <button class="speed-btn active" data-speed="2">2x</button>
+                            <button class="speed-btn" data-speed="3">3x</button>
+                            <button class="speed-btn" data-speed="5">5x</button>
+                        </div>
+                        <div class="current-speed-display">
+                            当前: <span id="current-speed-value">2x</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <span class="stat-label">动物数量：</span>
+                        <span id="animal-count" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">平均音量：</span>
+                        <span id="avg-volume" class="stat-value">0</span> dB
+                    </div>
+                </div>
+
+                <div class="life-hint">
+                    <p>💡 大声朗读才能让小动物留下来！3秒没声音就会消失哦~</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 设置面板 -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>设置</h2>
+                <button class="modal-close" id="close-settings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>动物生成速度</h3>
+                    <div class="slider-control">
+                        <input type="range" id="spawn-speed" min="1" max="60" value="10">
+                        <div class="slider-labels">
+                            <span>快</span>
+                            <span id="spawn-speed-value">10秒/只</span>
+                            <span>慢</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>选择动物种类</h3>
+                    <div class="animal-types">
+                        <div class="animal-type-row">
+                            <button id="select-all" class="btn-small">全选</button>
+                            <button id="select-none" class="btn-small">全不选</button>
+                        </div>
+                        <div class="animal-checkboxes">
+                            <label>
+                                <input type="checkbox" value="dog" checked>
+                                <span>🐕 狗</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="cat" checked>
+                                <span>🐱 猫</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="rabbit" checked>
+                                <span>🐰 兔子</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="bear" checked>
+                                <span>🐻 熊</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="panda" checked>
+                                <span>🐼 熊猫</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="pig" checked>
+                                <span>🐷 猪</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="unicorn" checked>
+                                <span>🦄 独角兽</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="frog" checked>
+                                <span>🐸 青蛙</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="penguin" checked>
+                                <span>🐧 企鹅</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="tiger" checked>
+                                <span>🐅 老虎</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="fish" checked>
+                                <span>🐠 鱼</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>高级设置</h3>
+                    <div class="advanced-settings">
+                        <label class="setting-item">
+                            <span>最大动物数量：</span>
+                            <input type="number" id="max-animals" min="10" max="500" value="100">
+                        </label>
+                        <label class="setting-item">
+                            <span>声音阈值：</span>
+                            <input type="number" id="volume-threshold" min="0" max="100" value="30"> dB
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings" class="btn-primary">保存设置</button>
+                <button id="reset-settings" class="btn-secondary">恢复默认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 错误提示 -->
+    <div id="error-toast" class="toast">
+        <span id="error-message"></span>
+    </div>
+
+    <!-- JavaScript模块 -->
+    <script type="module" src="scripts/main.js"></script>
+</body>
+</html>

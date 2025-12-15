@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动物生命系统 - 早读神器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(180deg, #87CEEB 0%, #4682B4 100%);
+            min-height: 100vh;
+        }
+
+        .guide-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .life-system {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .life-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .life-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .healthy {
+            border-color: #4CAF50;
+            background: linear-gradient(135deg, #4CAF5010, #4CAF5020);
+        }
+
+        .warning {
+            border-color: #FF9800;
+            background: linear-gradient(135deg, #FF980010, #FF980020);
+        }
+
+        .danger {
+            border-color: #F44336;
+            background: linear-gradient(135deg, #F4433610, #F4433620);
+        }
+
+        .timeline {
+            background: #f5f5f5;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .time-step {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .time-icon {
+            font-size: 2rem;
+            margin-right: 1rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .time-content h3 {
+            margin: 0 0 0.5rem 0;
+            color: #2E7D32;
+        }
+
+        .tips {
+            background: #E8F5E9;
+            border: 2px solid #4CAF50;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .tips h3 {
+            color: #2E7D32;
+            margin-top: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2E7D32;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="guide-container">
+        <h1>🐾 动物生命系统指南</h1>
+        <p class="subtitle">小动物的生命力取决于你的朗读声音！</p>
+
+        <div class="life-system">
+            <div class="life-card healthy">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">😊</div>
+                <h3>健康状态</h3>
+                <p><strong>声音 > 30dB</strong></p>
+                <p>小动物充满活力，颜色鲜艳</p>
+                <p>继续大声朗读吧！</p>
+            </div>
+
+            <div class="life-card warning">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">😟</div>
+                <h3>警告状态</h3>
+                <p><strong>安静 3 秒</strong></p>
+                <p>小动物开始变透明</p>
+                <p>周围出现红色光晕</p>
+            </div>
+
+            <div class="life-card danger">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">😱</div>
+                <h3>消失状态</h3>
+                <p><strong>安静 5 秒</strong></p>
+                <p>小动物完全消失</p>
+                <p>需要重新生成</p>
+            </div>
+        </div>
+
+        <div class="timeline">
+            <h2 style="text-align: center; color: #2E7D32;">⏱️ 生命时间线</h2>
+
+            <div class="time-step">
+                <div class="time-icon">🎤</div>
+                <div class="time-content">
+                    <h3>0 秒 - 生成</h3>
+                    <p>小动物带着动画效果出现，生命值 100%</p>
+                </div>
+            </div>
+
+            <div class="time-step">
+                <div class="time-icon">🔊</div>
+                <div class="time-content">
+                    <h3>持续朗读 - 维持生命</h3>
+                    <p>声音 > 30dB 时，小动物保持健康状态，甚至会恢复生命值</p>
+                </div>
+            </div>
+
+            <div class="time-step">
+                <div class="time-icon">🔇</div>
+                <div class="time-content">
+                    <h3>3 秒沉默 - 警告</h3>
+                    <p>小动物开始变透明，出现红色警告光晕</p>
+                </div>
+            </div>
+
+            <div class="time-step">
+                <div class="time-icon">💨</div>
+                <div class="time-content">
+                    <h3>5 秒沉默 - 消失</h3>
+                    <p>小动物旋转缩小，最终完全消失</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tips">
+            <h3>💡 朗读小贴士</h3>
+            <ul>
+                <li><strong>保持连贯</strong>：尽量不要让沉默时间超过 3 秒</li>
+                <li><strong>音量适中</strong>：声音需要超过 30dB（正常说话音量）</li>
+                <li><strong>节奏稳定</strong>：保持稳定的朗读节奏，小动物会更活跃</li>
+                <li><strong>集体朗读</strong>：如果是多人朗读，效果会更好</li>
+                <li><strong>情感投入</strong>：带有感情的朗读会产生更好的效果</li>
+            </ul>
+        </div>
+
+        <div class="tips" style="background: #FFF3E0; border-color: #FF9800;">
+            <h3>🎯 教育意义</h3>
+            <p>这个生命系统设计是为了：</p>
+            <ul>
+                <li><strong>培养持续朗读习惯</strong>：鼓励孩子保持连贯的朗读</li>
+                <li><strong>提高朗读音量</strong>：帮助孩子建立自信，大声朗读</li>
+                <li><strong>增强互动性</strong>：通过视觉反馈让孩子更投入</li>
+                <li><strong>建立成就感</strong>：维持小动物生命带来成就感</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

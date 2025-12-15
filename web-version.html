@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>早读神器 - 声音动物园</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    <!-- HTTPS 提示 -->
+    <div id="https-warning" class="https-warning" style="display: none;">
+        <h2>⚠️ 需要安全连接</h2>
+        <p>此应用需要 HTTPS 连接才能访问麦克风。</p>
+        <p>请访问 <a id="https-url"></a></p>
+    </div>
+
+    <!-- 欢迎界面 -->
+    <div id="welcome-screen" class="screen active">
+        <div class="welcome-content">
+            <h1 class="welcome-title">🇨🇳 早读神器 🐾</h1>
+            <p class="welcome-subtitle">用声音创造一个神奇的动物园！</p>
+            <div class="welcome-instructions">
+                <p>📢 大声朗读，声音越大，动物越多！</p>
+                <p>🎤 需要使用麦克风权限</p>
+                <p>🎨 可爱的像素风动物等着你</p>
+            </div>
+            <button id="welcome-start-btn" class="btn-primary btn-large">开始使用</button>
+        </div>
+    </div>
+
+    <!-- 分享链接 -->
+    <div id="share-section" class="share-section">
+        <button id="share-btn" class="share-btn" title="分享给朋友">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+            </svg>
+        </button>
+        <div id="share-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3>分享早读神器</h3>
+                <input type="text" id="share-url" readonly>
+                <button id="copy-link-btn">复制链接</button>
+                <button id="close-share-btn">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="main-screen" class="screen">
+        <header class="header">
+            <div class="header-left">
+                <h1 class="title">🇨🇳 早读神器 🐾</h1>
+            </div>
+            <div class="header-right">
+                <div class="volume-display">
+                    <span id="volume-value">0</span> dB
+                    <div class="volume-bar">
+                        <div id="volume-fill"></div>
+                    </div>
+                </div>
+                <div class="time-display">
+                    <span id="current-time">00:00</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <canvas id="zoo-canvas"></canvas>
+
+            <div class="control-panel">
+                <div class="controls-row">
+                    <button id="start-btn" class="btn-primary">开始早读</button>
+                    <button id="pause-btn" class="btn-secondary" disabled>暂停</button>
+                    <button id="clear-btn" class="btn-secondary">清空动物园</button>
+                    <button id="settings-btn" class="btn-secondary">设置</button>
+                </div>
+
+                <div class="speed-row">
+                    <div class="speed-controls">
+                        <div class="speed-label">生成速度：</div>
+                        <div class="speed-buttons">
+                            <button class="speed-btn" data-speed="0.5">0.5x</button>
+                            <button class="speed-btn" data-speed="1">1x</button>
+                            <button class="speed-btn active" data-speed="2">2x</button>
+                            <button class="speed-btn" data-speed="3">3x</button>
+                            <button class="speed-btn" data-speed="5">5x</button>
+                        </div>
+                        <div class="current-speed-display">
+                            当前: <span id="current-speed-value">2x</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <span class="stat-label">动物数量：</span>
+                        <span id="animal-count" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">平均音量：</span>
+                        <span id="avg-volume" class="stat-value">0</span> dB
+                    </div>
+                </div>
+
+                <div class="life-hint">
+                    <p>💡 大声朗读才能让小动物留下来！3秒没声音就会消失哦~</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 设置面板 -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>设置</h2>
+                <button class="modal-close" id="close-settings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>动物生成速度</h3>
+                    <div class="slider-control">
+                        <input type="range" id="spawn-speed" min="1" max="60" value="10">
+                        <div class="slider-labels">
+                            <span>快</span>
+                            <span id="spawn-speed-value">10秒/只</span>
+                            <span>慢</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>选择动物种类</h3>
+                    <div class="animal-types">
+                        <div class="animal-type-row">
+                            <button id="select-all" class="btn-small">全选</button>
+                            <button id="select-none" class="btn-small">全不选</button>
+                        </div>
+                        <div class="animal-checkboxes">
+                            <label>
+                                <input type="checkbox" value="dog" checked>
+                                <span>🐕 狗</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="cat" checked>
+                                <span>🐱 猫</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="rabbit" checked>
+                                <span>🐰 兔子</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="bear" checked>
+                                <span>🐻 熊</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="panda" checked>
+                                <span>🐼 熊猫</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="pig" checked>
+                                <span>🐷 猪</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="unicorn" checked>
+                                <span>🦄 独角兽</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="frog" checked>
+                                <span>🐸 青蛙</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="penguin" checked>
+                                <span>🐧 企鹅</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="tiger" checked>
+                                <span>🐅 老虎</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="fish" checked>
+                                <span>🐠 鱼</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>高级设置</h3>
+                    <div class="advanced-settings">
+                        <label class="setting-item">
+                            <span>最大动物数量：</span>
+                            <input type="number" id="max-animals" min="10" max="500" value="100">
+                        </label>
+                        <label class="setting-item">
+                            <span>声音阈值：</span>
+                            <input type="number" id="volume-threshold" min="0" max="100" value="30"> dB
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings" class="btn-primary">保存设置</button>
+                <button id="reset-settings" class="btn-secondary">恢复默认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 错误提示 -->
+    <div id="error-toast" class="toast">
+        <span id="error-message"></span>
+    </div>
+
+    <!-- JavaScript模块 -->
+    <script type="module" src="scripts/main.js"></script>
+    <script>
+        // HTTPS 检查
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            document.getElementById('https-warning').style.display = 'block';
+            document.getElementById('https-url').textContent = `https://${location.hostname}${location.pathname}`;
+            document.getElementById('https-url').href = `https://${location.hostname}${location.pathname}`;
+        }
+
+        // 分享功能
+        document.getElementById('share-btn').addEventListener('click', () => {
+            const modal = document.getElementById('share-modal');
+            const urlInput = document.getElementById('share-url');
+            urlInput.value = window.location.href;
+            modal.style.display = 'flex';
+        });
+
+        document.getElementById('copy-link-btn').addEventListener('click', async () => {
+            const urlInput = document.getElementById('share-url');
+            try {
+                await navigator.clipboard.writeText(urlInput.value);
+                alert('链接已复制！');
+            } catch (err) {
+                // 降级方案
+                urlInput.select();
+                document.execCommand('copy');
+                alert('链接已复制！');
+            }
+        });
+
+        document.getElementById('close-share-btn').addEventListener('click', () => {
+            document.getElementById('share-modal').style.display = 'none';
+        });
+
+        // 点击模态框外部关闭
+        document.getElementById('share-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'share-modal') {
+                e.target.style.display = 'none';
+            }
+        });
+    </script>
+
+    <style>
+        .https-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .https-warning h2 {
+            color: #ff6b6b;
+            margin-bottom: 20px;
+        }
+
+        .https-warning a {
+            color: #4ecdc4;
+            text-decoration: none;
+            font-size: 1.2em;
+        }
+
+        .share-section {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .share-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .share-btn:hover {
+            transform: scale(1.1);
+        }
+
+        #share-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        #share-modal .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        #share-url {
+            width: 100%;
+            padding: 10px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        #share-modal button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #copy-link-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        #close-share-btn {
+            background: #f44336;
+            color: white;
+        }
+    </style>
+</body>
+</html>
