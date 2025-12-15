@@ -7,6 +7,13 @@
     <link rel="stylesheet" href="styles/style.css">
 </head>
 <body>
+    <!-- HTTPS 提示 -->
+    <div id="https-warning" class="https-warning" style="display: none;">
+        <h2>⚠️ 需要安全连接</h2>
+        <p>此应用需要 HTTPS 连接才能访问麦克风。</p>
+        <p>请访问 <a id="https-url"></a></p>
+    </div>
+
     <!-- 欢迎界面 -->
     <div id="welcome-screen" class="screen active">
         <div class="welcome-content">
@@ -18,6 +25,23 @@
                 <p>🎨 可爱的像素风动物等着你</p>
             </div>
             <button id="welcome-start-btn" class="btn-primary btn-large">开始使用</button>
+        </div>
+    </div>
+
+    <!-- 分享链接 -->
+    <div id="share-section" class="share-section">
+        <button id="share-btn" class="share-btn" title="分享给朋友">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+            </svg>
+        </button>
+        <div id="share-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3>分享早读神器</h3>
+                <input type="text" id="share-url" readonly>
+                <button id="copy-link-btn">复制链接</button>
+                <button id="close-share-btn">关闭</button>
+            </div>
         </div>
     </div>
 
@@ -189,5 +213,145 @@
 
     <!-- JavaScript模块 -->
     <script type="module" src="scripts/main.js"></script>
+    <script>
+        // HTTPS 检查
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            document.getElementById('https-warning').style.display = 'block';
+            document.getElementById('https-url').textContent = `https://${location.hostname}${location.pathname}`;
+            document.getElementById('https-url').href = `https://${location.hostname}${location.pathname}`;
+        }
+
+        // 分享功能
+        document.getElementById('share-btn').addEventListener('click', () => {
+            const modal = document.getElementById('share-modal');
+            const urlInput = document.getElementById('share-url');
+            urlInput.value = window.location.href;
+            modal.style.display = 'flex';
+        });
+
+        document.getElementById('copy-link-btn').addEventListener('click', async () => {
+            const urlInput = document.getElementById('share-url');
+            try {
+                await navigator.clipboard.writeText(urlInput.value);
+                alert('链接已复制！');
+            } catch (err) {
+                // 降级方案
+                urlInput.select();
+                document.execCommand('copy');
+                alert('链接已复制！');
+            }
+        });
+
+        document.getElementById('close-share-btn').addEventListener('click', () => {
+            document.getElementById('share-modal').style.display = 'none';
+        });
+
+        // 点击模态框外部关闭
+        document.getElementById('share-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'share-modal') {
+                e.target.style.display = 'none';
+            }
+        });
+    </script>
+
+    <style>
+        .https-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .https-warning h2 {
+            color: #ff6b6b;
+            margin-bottom: 20px;
+        }
+
+        .https-warning a {
+            color: #4ecdc4;
+            text-decoration: none;
+            font-size: 1.2em;
+        }
+
+        .share-section {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .share-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .share-btn:hover {
+            transform: scale(1.1);
+        }
+
+        #share-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        #share-modal .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        #share-url {
+            width: 100%;
+            padding: 10px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        #share-modal button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #copy-link-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        #close-share-btn {
+            background: #f44336;
+            color: white;
+        }
+    </style>
 </body>
 </html>
