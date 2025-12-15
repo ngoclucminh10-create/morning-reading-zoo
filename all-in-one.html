@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>早读神器 - 声音动物园</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 屏幕切换 */
+        .screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* 欢迎界面 */
+        #welcome-screen {
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .welcome-content {
+            text-align: center;
+            color: white;
+            animation: fadeInUp 1s ease;
+        }
+
+        .welcome-title {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .welcome-subtitle {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .welcome-instructions {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        .welcome-instructions p {
+            margin: 10px 0;
+            font-size: 1.2em;
+        }
+
+        /* 按钮 */
+        .btn-primary {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            font-size: 1.3em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 5px 20px rgba(255,107,107,0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255,107,107,0.5);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-large {
+            font-size: 1.5em;
+            padding: 25px 60px;
+        }
+
+        /* 主界面 */
+        #main-screen {
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            color: white;
+        }
+
+        .title {
+            font-size: 1.8em;
+        }
+
+        .volume-display, .time-display {
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin: 0 10px;
+        }
+
+        .volume-bar {
+            width: 150px;
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        #volume-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.2s ease, background 0.2s ease;
+        }
+
+        /* 画布 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        #zoo-canvas {
+            flex: 1;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 20px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+            color: white;
+        }
+
+        .controls-row, .speed-row, .stats-row {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .speed-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .speed-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .speed-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid transparent;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .speed-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .speed-btn.active {
+            background: #4CAF50;
+            border-color: white;
+        }
+
+        .stat-item {
+            background: rgba(0,0,0,0.2);
+            padding: 10px 20px;
+            border-radius: 15px;
+            margin: 0 10px;
+        }
+
+        .life-hint {
+            text-align: center;
+            margin-top: 15px;
+            opacity: 0.8;
+        }
+
+        /* 模态框 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            font-size: 30px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* 动画 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* HTTPS 警告 */
+        .https-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .https-warning h2 {
+            color: #ff6b6b;
+            margin-bottom: 20px;
+        }
+
+        .https-warning a {
+            color: #4ecdc4;
+            text-decoration: none;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <!-- HTTPS 提示 -->
+    <div id="https-warning" class="https-warning" style="display: none;">
+        <h2>⚠️ 需要安全连接</h2>
+        <p>此应用需要 HTTPS 连接才能访问麦克风。</p>
+        <p>请访问 <a id="https-url"></a></p>
+    </div>
+
+    <!-- 欢迎界面 -->
+    <div id="welcome-screen" class="screen active">
+        <div class="welcome-content">
+            <h1 class="welcome-title">🇨🇳 早读神器 🐾</h1>
+            <p class="welcome-subtitle">用声音创造一个神奇的动物园！</p>
+            <div class="welcome-instructions">
+                <p>📢 大声朗读，声音越大，动物越多！</p>
+                <p>🎤 需要使用麦克风权限</p>
+                <p>🎨 可爱的像素风动物等着你</p>
+            </div>
+            <button id="welcome-start-btn" class="btn-primary btn-large">开始使用</button>
+        </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="main-screen" class="screen">
+        <header class="header">
+            <div class="header-left">
+                <h1 class="title">🇨🇳 早读神器 🐾</h1>
+            </div>
+            <div class="header-right">
+                <div class="volume-display">
+                    <span id="volume-value">0</span> dB
+                    <div class="volume-bar">
+                        <div id="volume-fill"></div>
+                    </div>
+                </div>
+                <div class="time-display">
+                    <span id="current-time">00:00</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <canvas id="zoo-canvas"></canvas>
+
+            <div class="control-panel">
+                <div class="controls-row">
+                    <button id="start-btn" class="btn-primary">开始早读</button>
+                    <button id="pause-btn" class="btn-secondary" disabled>暂停</button>
+                    <button id="clear-btn" class="btn-secondary">清空动物园</button>
+                    <button id="settings-btn" class="btn-secondary">设置</button>
+                </div>
+
+                <div class="speed-row">
+                    <div class="speed-controls">
+                        <div class="speed-label">生成速度：</div>
+                        <div class="speed-buttons">
+                            <button class="speed-btn" data-speed="0.5">0.5x</button>
+                            <button class="speed-btn" data-speed="1">1x</button>
+                            <button class="speed-btn active" data-speed="2">2x</button>
+                            <button class="speed-btn" data-speed="3">3x</button>
+                            <button class="speed-btn" data-speed="5">5x</button>
+                        </div>
+                        <div class="current-speed-display">
+                            当前: <span id="current-speed-value">2x</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <span class="stat-label">动物数量：</span>
+                        <span id="animal-count" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">平均音量：</span>
+                        <span id="avg-volume" class="stat-value">0</span> dB
+                    </div>
+                </div>
+
+                <div class="life-hint">
+                    <p>💡 大声朗读才能让小动物留下来！3秒没声音就会消失哦~</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 错误提示 -->
+    <div id="error-toast" class="toast">
+        <span id="error-message"></span>
+    </div>
+
+    <script>
+        // 简化版的音频检测器
+        class SimpleAudioDetector {
+            constructor() {
+                this.audioContext = null;
+                this.analyser = null;
+                this.microphone = null;
+                this.isListening = false;
+                this.volumeThreshold = 30;
+                this.volumeHistory = [];
+                this.maxHistoryLength = 10;
+            }
+
+            async init() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                    this.microphone = this.audioContext.createMediaStreamSource(stream);
+                    this.analyser = this.audioContext.createAnalyser();
+                    this.analyser.fftSize = 256;
+
+                    this.microphone.connect(this.analyser);
+
+                    return true;
+                } catch (error) {
+                    console.error('音频初始化失败:', error);
+                    throw error;
+                }
+            }
+
+            start() {
+                this.isListening = true;
+                this.detectVolume();
+            }
+
+            stop() {
+                this.isListening = false;
+            }
+
+            detectVolume() {
+                if (!this.isListening) return;
+
+                const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+                this.analyser.getByteFrequencyData(dataArray);
+
+                const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+                const normalizedVolume = Math.min(100, (average / 128) * 100);
+
+                this.volumeHistory.push(normalizedVolume);
+                if (this.volumeHistory.length > this.maxHistoryLength) {
+                    this.volumeHistory.shift();
+                }
+
+                if (this.onVolumeChange) {
+                    this.onVolumeChange(normalizedVolume);
+                }
+
+                requestAnimationFrame(() => this.detectVolume());
+            }
+
+            getVolumeLevel() {
+                if (this.volumeHistory.length === 0) return 0;
+                const sum = this.volumeHistory.reduce((a, b) => a + b, 0);
+                return sum / this.volumeHistory.length;
+            }
+
+            getAverageVolume() {
+                return Math.round(this.getVolumeLevel());
+            }
+
+            isAboveThreshold() {
+                return this.getVolumeLevel() > this.volumeThreshold;
+            }
+
+            setVolumeThreshold(threshold) {
+                this.volumeThreshold = threshold;
+            }
+        }
+
+        // 简化版的动物管理器
+        class SimpleAnimalManager {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.animals = [];
+                this.maxAnimals = 100;
+                this.lastSpawnTime = 0;
+                this.spawnInterval = 5000; // 5秒
+                this.selectedAnimalTypes = ['dog', 'cat', 'rabbit', 'bear', 'panda'];
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+
+            resizeCanvas() {
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height - 150;
+            }
+
+            update(deltaTime, volume) {
+                // 更新所有动物
+                this.animals = this.animals.filter(animal => {
+                    animal.update(deltaTime, volume);
+                    return animal.life > 0;
+                });
+
+                // 动物消失
+                this.animals.forEach(animal => {
+                    if (animal.life <= 0 && !animal.isDisappearing) {
+                        animal.isDisappearing = true;
+                        animal.disappearAnimation = 0;
+                    }
+                });
+            }
+
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // 绘制背景
+                this.ctx.fillStyle = '#87CEEB';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // 绘制地面
+                this.ctx.fillStyle = '#90EE90';
+                this.ctx.fillRect(0, this.canvas.height - 50, this.canvas.width, 50);
+
+                // 绘制所有动物
+                this.animals.forEach(animal => animal.render(this.ctx));
+            }
+
+            shouldSpawnAnimal(currentTime, speedMultiplier = 1) {
+                if (this.animals.length >= this.maxAnimals) return false;
+
+                const adjustedInterval = this.spawnInterval / speedMultiplier;
+                return currentTime - this.lastSpawnTime > adjustedInterval;
+            }
+
+            spawnAnimal() {
+                if (this.animals.length >= this.maxAnimals) return null;
+
+                const types = this.selectedAnimalTypes;
+                const type = types[Math.floor(Math.random() * types.length)];
+
+                const animal = {
+                    type: type,
+                    x: Math.random() * (this.canvas.width - 50),
+                    y: this.canvas.height - 100 - Math.random() * 100,
+                    size: 40 + Math.random() * 20,
+                    life: 100,
+                    maxLife: 100,
+                    color: this.getRandomColor(),
+                    velocity: {
+                        x: (Math.random() - 0.5) * 2,
+                        y: 0
+                    },
+                    update: function(deltaTime, volume) {
+                        if (volume > 30) {
+                            this.life = Math.min(this.maxLife, this.life + deltaTime * 20);
+                        } else {
+                            this.life -= deltaTime * 10;
+                        }
+
+                        this.x += this.velocity.x;
+                        if (this.x <= 0 || this.x >= canvas.width - this.size) {
+                            this.velocity.x *= -1;
+                        }
+                    },
+                    render: function(ctx) {
+                        const opacity = this.isDisappearing ?
+                            Math.max(0, 1 - this.disappearAnimation) :
+                            this.life / this.maxLife;
+
+                        ctx.save();
+                        ctx.globalAlpha = opacity;
+
+                        // 绘制简单的动物形状
+                        ctx.fillStyle = this.color;
+                        ctx.fillRect(this.x, this.y, this.size, this.size);
+
+                        // 绘制表情
+                        ctx.fillStyle = '#000';
+                        ctx.fillRect(this.x + 10, this.y + 10, 5, 5);
+                        ctx.fillRect(this.x + this.size - 15, this.y + 10, 5, 5);
+
+                        // 绘制嘴巴
+                        if (this.life > 50) {
+                            ctx.fillRect(this.x + 15, this.y + 25, this.size - 30, 3);
+                        }
+
+                        ctx.restore();
+
+                        if (this.isDisappearing) {
+                            this.disappearAnimation += 0.05;
+                        }
+                    }
+                };
+
+                this.animals.push(animal);
+                this.lastSpawnTime = Date.now();
+                return animal;
+            }
+
+            getRandomColor() {
+                const colors = ['#FFD700', '#FF69B4', '#00CED1', '#FF6347', '#98FB98'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            getAnimalCount() {
+                return this.animals.length;
+            }
+
+            clear() {
+                this.animals = [];
+            }
+        }
+
+        // 主应用类
+        class MorningReadingZoo {
+            constructor() {
+                this.audio = null;
+                this.animals = null;
+                this.isRunning = false;
+                this.isPaused = false;
+                this.lastTime = 0;
+                this.startTime = null;
+                this.currentSpeedMultiplier = 2;
+
+                // UI元素
+                this.welcomeScreen = document.getElementById('welcome-screen');
+                this.mainScreen = document.getElementById('main-screen');
+                this.startBtn = document.getElementById('start-btn');
+                this.pauseBtn = document.getElementById('pause-btn');
+                this.clearBtn = document.getElementById('clear-btn');
+                this.welcomeStartBtn = document.getElementById('welcome-start-btn');
+                this.volumeValue = document.getElementById('volume-value');
+                this.volumeFill = document.getElementById('volume-fill');
+                this.animalCount = document.getElementById('animal-count');
+                this.avgVolume = document.getElementById('avg-volume');
+                this.currentTime = document.getElementById('current-time');
+                this.errorToast = document.getElementById('error-toast');
+                this.errorMessage = document.getElementById('error-message');
+                this.currentSpeedDisplay = document.getElementById('current-speed-value');
+
+                this.init();
+            }
+
+            async init() {
+                try {
+                    const canvas = document.getElementById('zoo-canvas');
+                    this.animals = new SimpleAnimalManager(canvas);
+                    this.bindEvents();
+                    this.updateTime();
+                } catch (error) {
+                    console.error('初始化失败:', error);
+                    this.showError('初始化失败: ' + error.message);
+                }
+            }
+
+            bindEvents() {
+                this.welcomeStartBtn.addEventListener('click', () => this.start());
+                this.startBtn.addEventListener('click', () => this.startReading());
+                this.pauseBtn.addEventListener('click', () => this.pauseReading());
+                this.clearBtn.addEventListener('click', () => this.clearZoo());
+
+                document.getElementById('settings-btn').addEventListener('click', () => {
+                    alert('设置功能开发中...');
+                });
+
+                // 速度按钮
+                document.querySelectorAll('.speed-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentSpeedMultiplier = parseFloat(e.target.dataset.speed);
+                        this.currentSpeedDisplay.textContent = e.target.textContent;
+                    });
+                });
+            }
+
+            async start() {
+                try {
+                    this.showLoading(true);
+                    this.audio = new SimpleAudioDetector();
+                    this.audio.onVolumeChange = (volume) => this.onVolumeChange(volume);
+                    await this.audio.init();
+
+                    this.welcomeScreen.classList.remove('active');
+                    this.mainScreen.classList.add('active');
+                    this.gameLoop();
+                } catch (error) {
+                    console.error('启动失败:', error);
+                    this.showError(error.message);
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            startReading() {
+                if (!this.audio) {
+                    this.showError('音频系统未初始化');
+                    return;
+                }
+
+                this.isRunning = true;
+                this.isPaused = false;
+                this.startTime = Date.now();
+                this.audio.start();
+                this.startBtn.disabled = true;
+                this.pauseBtn.disabled = false;
+                this.showToast('早读开始！大声朗读吧！');
+            }
+
+            pauseReading() {
+                if (!this.isRunning) return;
+                this.isPaused = !this.isPaused;
+                if (this.isPaused) {
+                    this.audio.stop();
+                    this.pauseBtn.textContent = '继续';
+                    this.showToast('已暂停');
+                } else {
+                    this.audio.start();
+                    this.pauseBtn.textContent = '暂停';
+                    this.showToast('继续早读！');
+                }
+            }
+
+            clearZoo() {
+                this.animals.clear();
+                this.updateStats();
+                this.showToast('动物园已清空');
+            }
+
+            gameLoop(currentTime = 0) {
+                const deltaTime = (currentTime - this.lastTime) / 1000;
+                this.lastTime = currentTime;
+
+                if (this.isRunning && !this.isPaused) {
+                    const currentVolume = this.audio ? this.audio.getVolumeLevel() : 0;
+                    this.animals.update(deltaTime, currentVolume);
+
+                    if (this.audio.isAboveThreshold()) {
+                        if (this.animals.shouldSpawnAnimal(currentTime, this.currentSpeedMultiplier)) {
+                            const spawnChance = Math.min(0.5, this.currentSpeedMultiplier * 0.1);
+                            if (Math.random() < spawnChance) {
+                                const animal = this.animals.spawnAnimal();
+                                if (animal) {
+                                    this.onAnimalSpawned(animal);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    const currentVolume = this.audio ? this.audio.getVolumeLevel() : 0;
+                    this.animals.update(deltaTime, currentVolume);
+                }
+
+                this.animals.render();
+                requestAnimationFrame((time) => this.gameLoop(time));
+            }
+
+            onVolumeChange(volume) {
+                this.volumeValue.textContent = Math.round(volume);
+                this.volumeFill.style.width = `${Math.min(100, volume)}%`;
+                this.updateStats();
+            }
+
+            onAnimalSpawned(animal) {
+                this.updateStats();
+            }
+
+            updateStats() {
+                this.animalCount.textContent = this.animals.getAnimalCount();
+                if (this.audio) {
+                    this.avgVolume.textContent = this.audio.getAverageVolume();
+                }
+            }
+
+            updateTime() {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                this.currentTime.textContent = `${hours}:${minutes}`;
+                setTimeout(() => this.updateTime(), 1000);
+            }
+
+            showError(message) {
+                this.errorMessage.textContent = message;
+                this.errorToast.classList.add('show');
+                setTimeout(() => {
+                    this.errorToast.classList.remove('show');
+                }, 5000);
+            }
+
+            showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'toast show';
+                toast.textContent = message;
+                toast.style.background = '#4CAF50';
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 3000);
+            }
+
+            showLoading(show) {
+                if (show) {
+                    this.welcomeStartBtn.textContent = '加载中...';
+                    this.welcomeStartBtn.disabled = true;
+                } else {
+                    this.welcomeStartBtn.textContent = '开始使用';
+                    this.welcomeStartBtn.disabled = false;
+                }
+            }
+        }
+
+        // HTTPS 检查
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            document.getElementById('https-warning').style.display = 'flex';
+            document.getElementById('https-url').textContent = `https://${location.hostname}${location.pathname}`;
+            document.getElementById('https-url').href = `https://${location.hostname}${location.pathname}`;
+        }
+
+        // 启动应用
+        window.addEventListener('DOMContentLoaded', () => {
+            window.zooApp = new MorningReadingZoo();
+        });
+
+        // 错误处理
+        window.addEventListener('error', (event) => {
+            console.error('全局错误:', event.error);
+            if (window.zooApp) {
+                window.zooApp.showError('发生了一个错误，请刷新页面重试');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>文件检查</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>文件检查 - 早读神器</h1>
+    <div id="results"></div>
+
+    <script>
+        const files = [
+            'styles/style.css',
+            'scripts/main.js',
+            'scripts/audio.js',
+            'scripts/animals.js',
+            'scripts/settings.js'
+        ];
+
+        const results = document.getElementById('results');
+
+        async function checkFiles() {
+            for (let file of files) {
+                try {
+                    const response = await fetch(file);
+                    if (response.ok) {
+                        results.innerHTML += `<div class="status success">✅ ${file} - 加载成功</div>`;
+                    } else {
+                        results.innerHTML += `<div class="status error">❌ ${file} - 错误 ${response.status}</div>`;
+                    }
+                } catch (error) {
+                    results.innerHTML += `<div class="status error">❌ ${file} - 加载失败: ${error.message}</div>`;
+                }
+            }
+        }
+
+        checkFiles();
+    </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Page</title>
+</head>
+<body>
+    <h1>测试页面</h1>
+    <p>如果你能看到这个页面，说明 GitHub Pages 工作正常。</p>
+    <p>请检查以下文件是否存在：</p>
+    <ul>
+        <li>styles/style.css</li>
+        <li>scripts/main.js</li>
+        <li>scripts/audio.js</li>
+        <li>scripts/animals.js</li>
+        <li>scripts/settings.js</li>
+    </ul>
+    <script>
+        console.log('测试页面加载成功');
+        // 测试模块加载
+        import('./scripts/main.js').then(() => {
+            console.log('main.js 加载成功');
+        }).catch(err => {
+            console.error('main.js 加载失败:', err);
+        });
+    </script>
+</body>
+</html>
